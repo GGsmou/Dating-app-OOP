@@ -1,0 +1,15 @@
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/bin/Debug/net7.0/FindYourDate
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/bin/Debug/net7.0/FindYourDate.deps.json
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/bin/Debug/net7.0/FindYourDate.runtimeconfig.json
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/bin/Debug/net7.0/FindYourDate.dll
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/bin/Debug/net7.0/FindYourDate.pdb
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/FindYourDate.csproj.AssemblyReference.cache
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/FindYourDate.GeneratedMSBuildEditorConfig.editorconfig
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/FindYourDate.AssemblyInfoInputs.cache
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/FindYourDate.AssemblyInfo.cs
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/FindYourDate.csproj.CoreCompileInputs.cache
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/FindYourDate.dll
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/refint/FindYourDate.dll
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/FindYourDate.pdb
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/FindYourDate.genruntimeconfig.cache
+/Users/ggsmou/Desktop/GitHubRepo/Dating-app-OOP/FindYourDate/obj/Debug/net7.0/ref/FindYourDate.dll
