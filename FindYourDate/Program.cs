@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -10,25 +11,27 @@ namespace FindYourDate
     class User
     {
         public string Name { get; set; }
-        public char Gender { get; set; }
+        public string Gender { get; set; }
         public int ID { get; set; }
         public List<string> Info { get; set; }
         public List<string> Requirements { get; set; }
-        public string Invitations { get; set; }
+        public int Invitations { get; set; }
+        public bool HasBeenInvited { get; set; }
 
-        public User(string name, char gender, int id, List<string> info, List<string> requirements)
+        public User(string name, string gender, int id, List<string> info, List<string> requirements)
         {
             Name = name;
             Gender = gender;
             ID = id;
             Info = info;
             Requirements = requirements;
-            Invitations = "";
+            Invitations = -1;
+            HasBeenInvited = false;
         }
 
         public bool isInvited()
         {
-            return Invitations != "";
+            return Invitations != -1;
         }
     }
 
@@ -44,7 +47,7 @@ namespace FindYourDate
 
             while (true)
             {
-                PrintClass.DrawMenu("Вхід", new string[] { "Обрати інсуючий профіль", "Створити новий профіль", "Вийти" });
+                PrintClass.DrawMenu("Вхiд", new string[] { "Обрати iнсуючий профiль", "Створити новий профiль", "Вийти" });
 
                 int choice = PrintClass.GetUserChoice(3);
                 Console.Clear();
@@ -55,7 +58,7 @@ namespace FindYourDate
                         Login();
                         break;
                     case 2:
-                        CreateNewAccount();
+                        CreateNewAccount(true);
                         break;
                     case 3:
                         Console.WriteLine("Дякую за використання додатка. Завершення роботи...");
@@ -70,13 +73,14 @@ namespace FindYourDate
         {
             if (database.IsEmpty())
             {
-                Console.WriteLine("Профілів нема, створіть новий.");
+                Console.WriteLine("Профiлiв нема, створiть новий.");
+                Thread.Sleep(2000);
                 return;
             }
 
-            PrintClass.DrawTitle("Логін");
+            PrintClass.DrawTitle("Логiн");
 
-            Console.WriteLine("Оберіть ваш профіль:");
+            Console.WriteLine("Оберiть ваш профiль:");
             List<User> users = database.GetAll();
 
             for (int i = 0; i < users.Count; i++)
@@ -88,39 +92,67 @@ namespace FindYourDate
             int choice = PrintClass.GetUserChoice(users.Count);
             User selectedUser = users[choice - 1];
 
-            Console.WriteLine($"Ви увійшли як {selectedUser.Name}");
+            Console.WriteLine($"Ви увiйшли як {selectedUser.Name}");
             MainMenu(selectedUser);
         }
 
-        static void CreateNewAccount()
+        static void CreateNewAccount(bool isStart)
         {
-            PrintClass.DrawTitle("Створення профілю");
+            static string NameProccesor()
+            {
+                Console.Write("Уведiть ваше iм'я: ");
+                string inp = Console.ReadLine();
 
-            Console.Write("Уведіть ваше ім'я: ");
-            string name = Console.ReadLine();
+                if (inp.Length > 100)
+                {
+                    Console.WriteLine("Задовге iм'я");
+                    return NameProccesor();
+                }
 
-            Console.Write("Уведіть вашу стать (ч/ж): ");
-            char gender = Console.ReadKey().KeyChar;
-            Console.WriteLine();
+                return inp;
+            }
+            static string GenderProccesor()
+            {
+                Console.Write("Укажiть вашу стать (ч/ж): ");
+                string inp = Console.ReadLine();
+
+                if (inp != "ч" && inp != "ж")
+                {
+                    Console.WriteLine("Не коректне значення");
+                    return GenderProccesor();
+                }
+
+                return inp;
+            }
+
+            PrintClass.DrawTitle("Створення профiлю");
+
+            string name = NameProccesor();
+            string gender = GenderProccesor();
 
             List<User> users = database.GetAll();
-            int id = users.Count + 1000;
+            int id = Int32.Parse(File.ReadAllText("id.txt"));
+            File.WriteAllText("id.txt", $"{id + 1}");
 
             List<string> info = new List<string>();
-            Console.WriteLine("Введіть ваші характеристики (через кому): ");
+            Console.WriteLine("Введiть вашi характеристики (через кому): ");
             string[] infoArray = Console.ReadLine().Split(',');
             info.AddRange(infoArray);
 
             List<string> requirements = new List<string>();
-            Console.WriteLine("Введіть характеристики потенційного партнера (через кому): ");
+            Console.WriteLine("Введiть характеристики потенцiйного партнера (через кому): ");
             string[] requirementsArray = Console.ReadLine().Split(',');
             requirements.AddRange(requirementsArray);
 
             User newUser = new User(name, gender, id, info, requirements);
             database.Add(newUser);
 
-            Console.WriteLine("Аккаунт створено");
-            MainMenu(newUser);
+            Console.WriteLine("\nАккаунт створено");
+            
+            if (isStart)
+            {
+                MainMenu(newUser);
+            }
         }
 
         static void MainMenu(User user)
@@ -128,7 +160,14 @@ namespace FindYourDate
             while (true)
             {
                 PrintClass.DrawTitle("Головне меню");
-                PrintClass.DrawMenu($"{user.Name} - {user.Info}", new string[] { "Додати профіль", "Видалити профіль", "Пошук партнера", "Пропозиції зустрічатися", "Вихід" });
+
+                string isAccecible = "";
+                if (user.isInvited())
+                {
+                    isAccecible = "(не доступно)";
+                }
+
+                PrintClass.DrawMenu($"{user.Name} - {user.ID}", new string[] { "Додати профiль", "Видалити профiль", $"Пошук партнера{isAccecible}", "Пропозицiї зустрiчатися", "Вихiд" });
 
                 int choice = PrintClass.GetUserChoice(5);
                 Console.Clear();
@@ -136,13 +175,16 @@ namespace FindYourDate
                 switch (choice)
                 {
                     case 1:
-                        CreateNewAccount();
+                        CreateNewAccount(false);
                         break;
                     case 2:
-                        DeleteAccount();
+                        DeleteAccount(user.ID);
                         break;
                     case 3:
-                        SearchForPartners(user);
+                        if (!user.isInvited())
+                        { 
+                            SearchForPartners(user);
+                        }
                         break;
                     case 4:
                         ViewInvitations(user);
@@ -156,10 +198,10 @@ namespace FindYourDate
             }
         }
 
-        static void DeleteAccount()
+        static void DeleteAccount(int currentUserID)
         {
-            PrintClass.DrawTitle("Видалення профілю");
-            Console.WriteLine("Оберіть ваш профіль:");
+            PrintClass.DrawTitle("Видалення профiлю");
+            Console.WriteLine("Оберiть профiль цифорою (0 - вихiд):");
 
             List<User> users = database.GetAll();
 
@@ -170,48 +212,73 @@ namespace FindYourDate
             }
 
             int choice = PrintClass.GetUserChoice(users.Count);
+
+            if (choice == 0)
+            {
+                return;
+            }
+
             User selectedUser = users[choice - 1];
 
+            if (selectedUser.ID == currentUserID)
+            {
+                Console.WriteLine("\nНе можна видалити активний профiль");
+                Thread.Sleep(2000);
+                return;
+            }
+
+            if (selectedUser.isInvited())
+            {
+                User invited = GetPartnedByID(selectedUser.Invitations);
+                invited.Invitations = -1;
+                invited.HasBeenInvited = false;
+                database.Update(invited);
+            }
             database.Delete(selectedUser.ID);
-            Console.WriteLine($"Профіль '{selectedUser.Name}' видалено.");
+            Console.WriteLine($"Профiль '{selectedUser.Name}' видалено.");
         }
 
         static void SearchForPartners(User user)
         {
             PrintClass.DrawTitle("Пошук партнера");
 
-            List<User> potentialPartners = GetSortedPartners(user);//
+            List<User> potentialPartners = GetFilteredPartners(user);
 
             if (potentialPartners.Count == 0)
             {
-                Console.WriteLine("No potential partners found.");
+                Console.WriteLine("Для вас ще не знайдено пари.");
+                Thread.Sleep(2000);
                 return;
             }
 
-            Console.WriteLine("Potential Partners:");
+            Console.WriteLine("Потенцiйнi партнери:");
 
             List<User> sortedPartners = SorterClass.SortUsersByName(potentialPartners);
+            Console.Write("Оберiть номер користувача для створення запрошення (0 - вихiд):\n\n");
 
             for (int i = 0; i < sortedPartners.Count; i++)
             {
                 User partner = sortedPartners[i];
-                Console.WriteLine($"{i + 1}. {partner.Name} - {partner.ID} - {string.Join(", ", partner.Info)}");
+                Console.WriteLine($"{i + 1}. {partner.Name} - {partner.Gender} - {partner.ID} - {string.Join(", ", partner.Info)}");
             }
 
-            Console.Write("Choose a partner by number to send an invitation (0 to cancel): ");
             int choice = PrintClass.GetUserChoice(sortedPartners.Count);
 
             if (choice == 0)
                 return;
 
             User selectedPartner = sortedPartners[choice - 1];
-            user.Invitations.Add(selectedPartner.ID);
+            user.Invitations = selectedPartner.ID;
+            selectedPartner.Invitations = user.ID;
+            selectedPartner.HasBeenInvited = true;
 
-            Console.WriteLine($"Invitation sent to {selectedPartner.Name}!");
-            database.Update<User>(user);
+            Console.WriteLine($"\nЗапрошення вiдправлено {selectedPartner.Name}!");
+            database.Update(user);
+            database.Update(selectedPartner);
+            Thread.Sleep(2000);
         }
 
-        static List<User> GetSortedPartners(User user)
+        static List<User> GetFilteredPartners(User user)
         {
             List<User> result = new List<User>();
             List<User> all = database.GetAll();
@@ -225,6 +292,7 @@ namespace FindYourDate
                         if (partner.Info.Contains(requirement))
                         {
                             result.Add(partner);
+                            break;
                         }
                     }
                 }
@@ -233,51 +301,95 @@ namespace FindYourDate
             return result;
         }
 
+        static User GetPartnedByID(int ID)
+        {
+            List<User> all = database.GetAll();
+
+            foreach (User partner in all)
+            {
+                if (partner.ID == ID)
+                {
+                    return partner;
+                }
+            }
+
+            return null;
+        }
+
         static void ViewInvitations(User user)
         {
-            PrintClass.DrawTitle("View Invitations");
-
-            List<User> pendingInvitations = database.GetAll<User>(u => user.Invitations.Contains(u.ID));
-
-            if (pendingInvitations.Count == 0)
+            static void CancellInvitation(User user, User userInvitation)
             {
-                Console.WriteLine("You have no pending invitations.");
+                user.Invitations = -1;
+                userInvitation.Invitations = -1;
+                userInvitation.HasBeenInvited = false;
+                user.HasBeenInvited = false;
+
+                database.Update(userInvitation);
+                database.Update(user);
+            }
+
+            static void AcceptInvitation(User user, User userInvitation)
+            {
+                archive.Add(user);
+                archive.Add(userInvitation);
+
+                database.Delete(user.ID);
+                database.Delete(userInvitation.ID);
+            }
+
+            PrintClass.DrawTitle("Пропозицiї зустрiчатися");
+
+            User userInvitation = GetPartnedByID(user.Invitations);
+
+            if (userInvitation == null)
+            {
+                Console.WriteLine("Пропозицiї вiдсутнi");
+                Thread.Sleep(2000);
                 return;
             }
 
-            Console.WriteLine("Pending Invitations:");
+            Console.WriteLine($"{userInvitation.Name} - {userInvitation.ID} - {string.Join(", ", userInvitation.Info)}");
 
-            List<User> sortedInvitations = SorterClass.SortUsersByName(pendingInvitations);
-
-            for (int i = 0; i < sortedInvitations.Count; i++)
+            if (!user.HasBeenInvited)
             {
-                User invitation = sortedInvitations[i];
-                Console.WriteLine($"{i + 1}. {invitation.Name} - {invitation.ID} - {string.Join(", ", invitation.Info)}");
+                PrintClass.DrawMenu("(створено вами)", new string[] { "Вiдхилити", "Вихiд" });
+                int choice = PrintClass.GetUserChoice(2);
+
+                switch (choice)
+                {
+                    case 1:
+                        CancellInvitation(user, userInvitation);
+                        Console.WriteLine("\nПропозицiя вiдмiнена");
+                        Thread.Sleep(2000);
+                        return;
+                    case 2:
+                        return;
+                }
             }
-
-            Console.Write("Choose an invitation by number to accept (0 to cancel): ");
-            int choice = PrintClass.GetUserChoice(sortedInvitations.Count);
-
-            if (choice == 0)
-                return;
-
-            User acceptedInvitation = sortedInvitations[choice - 1];
-
-            if (user.ID < acceptedInvitation.ID)
+            if (user.HasBeenInvited)
             {
-                archive.Add<User>(user);
-                archive.Add<User>(acceptedInvitation);
-            }
-            else
-            {
-                archive.Add<User>(acceptedInvitation);
-                archive.Add<User>(user);
-            }
+                PrintClass.DrawMenu("", new string[] { "Вiдхилити", "Приняти", "Вихiд" });
+                int choice = PrintClass.GetUserChoice(3);
 
-            database.Delete<User>(u => u.ID == user.ID);
-            database.Delete<User>(u => u.ID == acceptedInvitation.ID);
-
-            Console.WriteLine($"You and {acceptedInvitation.Name} are now friends!");
+                switch (choice)
+                {
+                    case 1:
+                        CancellInvitation(user, userInvitation);
+                        Console.WriteLine("\nПропозицiя вiдмiнена.");
+                        Thread.Sleep(2000);
+                        return;
+                    case 2:
+                        AcceptInvitation(user, userInvitation);
+                        Console.WriteLine("\nПару знайдено!");
+                        Console.WriteLine("\n\nНатиснiть будь-яку для виходу...");
+                        Console.ReadKey();
+                        System.Environment.Exit(1);
+                        return;
+                    case 3:
+                        return;
+                }
+            }
         }
     }
 
@@ -285,7 +397,7 @@ namespace FindYourDate
     {
         public static void DrawTitle(string title)
         {
-            Console.WriteLine($"---{title}---");
+            Console.WriteLine($"\n---{title}---\n");
         }
 
         public static void DrawMenu(string title, string[] options)
@@ -301,12 +413,17 @@ namespace FindYourDate
         public static int GetUserChoice(int maxChoice)
         {
             int choice;
-            Console.Write("Команда: ");
+            Console.Write("\n> ");
 
             while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > maxChoice)
             {
+                if (choice == 0)
+                {
+                    return 0;
+                }
+
                 Console.WriteLine("Не коректна команда");
-                Console.Write("Команда: ");
+                Console.Write("\n> ");
             }
             return choice;
         }
@@ -330,28 +447,36 @@ namespace FindYourDate
             return JsonConvert.DeserializeObject<List<User>>(json);
         }
 
-        public void Add<T>(T item)
+        public void Add(User item)
         {
-            List<T> items = GetAll<T>();
+            List<User> items = GetAll();
             items.Add(item);
             SaveAll(items);
         }
 
         public void Delete(int id)
         {
-            List<User> items = GetAll<User>();
+            List<User> items = GetAll();
+
             items.RemoveAll(u => u.ID == id);
             SaveAll(items);
         }
 
-        public void Update<T>(T item)
+        public void Update(User inp)
         {
-            List<T> items = GetAll<T>();
-            int index = items.FindIndex(x => x.Equals(item));
-            if (index != -1)
+            List<User> items = GetAll();
+            int index = 0;
+            
+            foreach (User item in items)
             {
-                items[index] = item;
-                SaveAll(items);
+                if (item.ID == inp.ID)
+                {
+                    items[index] = inp;
+                    SaveAll(items);
+                    break;
+                }
+
+                index++;
             }
         }
 
@@ -360,9 +485,9 @@ namespace FindYourDate
             return !File.Exists(filePath) || new FileInfo(filePath).Length == 0;
         }
 
-        private void SaveAll<T>(List<T> items)
+        public void SaveAll(List<User> items)
         {
-            string json = JsonConvert.SerializeObject(items, Formatting.Indented);
+            string json = JsonConvert.SerializeObject(items);
             File.WriteAllText(filePath, json);
         }
     }
