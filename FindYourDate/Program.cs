@@ -103,7 +103,7 @@ namespace FindYourDate
                 Console.Write("Уведiть ваше iм'я: ");
                 string inp = Console.ReadLine();
 
-                if (inp.Length > 100)
+                if (inp.Length <=0 && inp.Length > 100)
                 {
                     Console.WriteLine("Задовге iм'я");
                     return NameProccesor();
@@ -113,10 +113,10 @@ namespace FindYourDate
             }
             static string GenderProccesor()
             {
-                Console.Write("Укажiть вашу стать (ч/ж): ");
+                Console.Write("Укажiть вашу стать (f/m): ");
                 string inp = Console.ReadLine();
 
-                if (inp != "ч" && inp != "ж")
+                if (inp != "f" && inp != "m")
                 {
                     Console.WriteLine("Не коректне значення");
                     return GenderProccesor();
